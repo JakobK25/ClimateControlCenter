@@ -5,6 +5,7 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 import psycopg2
+import math
 
 # Load environment variables from .env file
 load_dotenv()
@@ -102,16 +103,43 @@ while True:
         analog_value = board.analog[0].read()
         print(f"Raw analog value: {analog_value}")
         
+        # Replace your existing temperature calculation with this calibrated version:
+
         if analog_value is not None:
-            # Convert to temperature (example conversion - adjust as needed)
-            temperature = int(analog_value * 1023)  # Scale to 0-1023
+            # First approach: Direct linear mapping based on known value (0.3265 = ~18°C)
+            temperature_celsius = round((analog_value / 0.3265) * 18, 1)
             
-            # Insert data into PostgreSQL database
-            with conn.cursor() as cursor:
-                cursor.execute("INSERT INTO sensor_data (temperature) VALUES (%s)", (temperature,))
-                conn.commit()
-                print(f"Inserted temperature: {temperature} into database")
-        time.sleep(2)  # Shorter delay for testing
+            # Alternative approach: Steinhart-Hart equation for NTC thermistors
+            # Using different circuit configuration assumptions
+            if analog_value == 0:
+                analog_value = 0.001  # Prevent division by zero
+            
+            # Assuming 5V reference voltage and 10K pull-down resistor (not pull-up)
+            # This is a common Arduino temperature sensor setup
+            resistance = 10000 / (1.0/analog_value - 1.0)
+            
+            # Apply Steinhart-Hart equation with corrected parameters
+            B_constant = 4275
+            T0 = 298.15  # 25°C in Kelvin
+            R0 = 100000  # 100KΩ resistance at 25°C
+            
+            try:
+                temperature_kelvin = 1.0 / (1.0/T0 + (1.0/B_constant) * math.log(resistance/R0))
+                steinhart_celsius = round(temperature_kelvin - 273.15, 1)
+                
+                print(f"Analog: {analog_value}, Resistance: {resistance:.1f}Ω")
+                print(f"Linear conversion: {temperature_celsius}°C, Steinhart-Hart: {steinhart_celsius}°C")
+                
+                # Use the linear conversion for now as it's calibrated to your actual readings
+                with conn.cursor() as cursor:
+                    cursor.execute("INSERT INTO sensor_data (temperature) VALUES (%s)", (int(temperature_celsius),))
+                    conn.commit()
+                    print(f"Inserted temperature: {temperature_celsius}°C into database")
+            except (ValueError, ZeroDivisionError) as e:
+                print(f"Math error in temperature calculation: {e}")
+            except Exception as e:
+                print(f"Error inserting into database: {e}")
+        time.sleep(5)  # Shorter delay for testing
 
     except KeyboardInterrupt:
         print("Exiting...")
