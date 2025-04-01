@@ -51,18 +51,48 @@ except Exception as e:
 # Create a table if it doesn't exist
 try:
     with conn.cursor() as cursor:
+        # First, check if the table exists and what columns it has
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS sensor_data (
-                id SERIAL PRIMARY KEY,
-                temprature INTEGER NOT NULL,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'sensor_data'
         """)
-        conn.commit()
-        print("Table 'sensor_data' is ready")
+        columns = cursor.fetchall()
+        print(f"Existing columns in sensor_data: {columns}")
+        
+        if not columns:
+            # Create the table if it doesn't exist
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS sensor_data (
+                    id SERIAL PRIMARY KEY,
+                    temperature INTEGER NOT NULL,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.commit()
+            print("Table 'sensor_data' created with columns: id, temperature, timestamp")
+        elif 'temperature' not in [col[0] for col in columns]:
+            # If the table exists but doesn't have a temperature column, drop and recreate
+            cursor.execute("DROP TABLE sensor_data")
+            conn.commit()
+            cursor.execute("""
+                CREATE TABLE sensor_data (
+                    id SERIAL PRIMARY KEY,
+                    temperature INTEGER NOT NULL,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.commit()
+            print("Table 'sensor_data' recreated with correct columns")
+        else:
+            print("Table 'sensor_data' already exists with correct columns")
 except Exception as e:
-    print(f"Failed to create table: {e}")
+    print(f"Failed to configure table: {e}")
     exit(1)
+
+# Configure the analog pin for reading
+board.analog[0].enable_reporting()
+print("Analog pin 0 configured for reading")
 
 # Read data from arduino and add to database
 while True:
@@ -70,20 +100,23 @@ while True:
         # Read data from Arduino (example: analog pin A0)
         print("Reading data from Arduino...")
         analog_value = board.analog[0].read()
+        print(f"Raw analog value: {analog_value}")
+        
         if analog_value is not None:
-            analog_value = int(analog_value * 1023)  # Scale to 0-1023
-
+            # Convert to temperature (example conversion - adjust as needed)
+            temperature = int(analog_value * 1023)  # Scale to 0-1023
+            
             # Insert data into PostgreSQL database
             with conn.cursor() as cursor:
-                cursor.execute("INSERT INTO sensor_data (value) VALUES (%s)", (analog_value,))
+                cursor.execute("INSERT INTO sensor_data (temperature) VALUES (%s)", (temperature,))
                 conn.commit()
-                print(f"Inserted value: {analog_value} into database")
-        time.sleep(10) 
-
+                print(f"Inserted temperature: {temperature} into database")
+        time.sleep(2)  # Shorter delay for testing
 
     except KeyboardInterrupt:
         print("Exiting...")
         break
     except Exception as e:
         print(f"Error: {e}")
+        print(f"Type: {type(e)}")
         break
