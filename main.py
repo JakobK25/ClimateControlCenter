@@ -78,10 +78,9 @@ while True:
                 cursor.execute("INSERT INTO sensor_data (value) VALUES (%s)", (analog_value,))
                 conn.commit()
                 print(f"Inserted value: {analog_value} into database")
-            time.sleep(10) 
+        time.sleep(10) 
 
 
-        time.sleep(1)  # Delay between readings
     except KeyboardInterrupt:
         print("Exiting...")
         break
