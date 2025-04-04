@@ -61,8 +61,7 @@ def update_dashboard(containers, config, data):
         # Update chart section
         with containers['chart']:
             st.subheader("Sensor History")
-            st.write(f"Last updated: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-            st.write("Update frequency: every 15 seconds")
+            st.write(f"Last updated (Every 15 seconds): {time.strftime('%Y-%m-%d %H:%M:%S')}")
             
             # Show alert if significant changes detected
             if (changes.get('temp_change_pct', 0) > 2 or 
