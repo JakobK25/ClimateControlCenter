@@ -140,6 +140,13 @@ prev_light = None
 prev_humidity = None
 last_change_time = time.time()
 
+# Add this near the top of your script, after initializing Streamlit
+# Clear the entire screen and set up the initial layout
+st.set_page_config(page_title="Climate Control Center", layout="wide")
+title_container = st.empty()
+sensor_container = st.empty()
+chart_container = st.empty()
+
 # Read data from arduino and add to database
 while True:
     try:
@@ -251,7 +258,54 @@ while True:
         else:
             print("Data not inserted into database due to missing values")
 
-        sleep_time = 3  # seconds
+        # Streamlit UI update (in the while loop)
+        try:
+            # Create a placeholder for all our data
+            with title_container:
+                st.title("Climate Control Center")
+                st.write(f"Running in {DB_ENV} mode - Connected to {DB_NAME}.{TABLE_NAME}")
+            
+            # Update sensor readings section
+            with sensor_container:
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric(
+                        label="Temperature", 
+                        value=f"{temperature_celsius}°C",
+                        delta=f"{temp_change_pct:.1f}%" if 'temp_change_pct' in locals() else None
+                    )
+                    
+                with col2:
+                    st.metric(
+                        label="Light", 
+                        value=f"{light_percent}%",
+                        delta=f"{light_change_pct:.1f}%" if 'light_change_pct' in locals() else None
+                    )
+                    st.caption(f"Category: {light_category}")
+                    
+                with col3:
+                    st.metric(
+                        label="Humidity", 
+                        value=f"{humidity_raw}",
+                        delta=f"{humidity_change_pct:.1f}%" if 'humidity_change_pct' in locals() else None
+                    )
+            
+            # Update chart section - add historical data if needed
+            with chart_container:
+                st.subheader("Sensor History")
+                # This part could be enhanced to show a chart of historical readings
+                # For now we'll just show the last update time
+                st.write(f"Last updated: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+                
+                # Optionally add alert status
+                if 'temp_change_pct' in locals() and (temp_change_pct > 2 or light_change_pct > 2 or humidity_change_pct > 2):
+                    st.warning("⚠️ Significant change detected!")
+        
+        except Exception as e:
+            st.error(f"Streamlit error: {e}")
+
+        sleep_time = 15  # seconds
         time.sleep(sleep_time)
 
     except KeyboardInterrupt:
