@@ -290,6 +290,51 @@ def calculate_air_flow(af_raw_value):
         'status': status
     }
 
+def last_hour_readings(conn, db, hours=1):
+    try:
+        time_from = datetime.now() - timedelta(hours=hours)
+        query = """
+            select * from sensor_data
+            where timestamp >= %s
+            order by timestamp ASC
+        """
+
+        db.execute(query, (time_from,))
+        rows = db.fetchall()
+
+        if rows:
+            df = pd.DataFrame(rows, columns=[desc[0] for desc in db.description])
+            return df
+        else:
+            return pd.DataFrame(columns=['id', 'timestamp', 'soil_moisture', 'air_temp', 'air_flow', 'air_light'])
+    except Exception as e:
+        st.error(f"Error fetching last hour readings: {e}")
+        return pd.DataFrame(columns=['id', 'timestamp', 'soil_moisture', 'air_temp', 'air_flow', 'air_light'])
+    
+def create_chart(df):
+    """Create charts for the historical sensor data."""
+    if df.empty:
+        return st.warning("No data available for the chart.")
+    
+    # Set time as index for better chart display
+    chart_df = df.copy()
+    chart_df = chart_df.set_index('timestamp')
+    
+    # Create separate charts for each sensor
+    st.subheader("Soil Moisture History")
+    fig1 = st.line_chart(chart_df['soil_moisture'], use_container_width=True, height=250)
+    
+    st.subheader("Temperature History")
+    fig2 = st.line_chart(chart_df['air_temp'], use_container_width=True, height=250)
+    
+    st.subheader("Air Flow History")
+    fig3 = st.line_chart(chart_df['air_flow'], use_container_width=True, height=250)
+    
+    st.subheader("Light Level History")
+    fig4 = st.line_chart(chart_df['air_light'], use_container_width=True, height=250)
+    
+    return fig1, fig2, fig3, fig4
+
 # Add a function to handle database operations safely
 def safe_db_execute(conn, cursor, query, data=None):
     """Execute a database query safely with proper transaction handling."""
@@ -457,6 +502,18 @@ def main():
         st.error(f"Error reading sensor data: {e}")
         import traceback
         st.code(traceback.format_exc())
+
+    # Display historical data charts
+    st.header("Sensor History (Last Hour)")
+
+    # Get historical data
+    hist_data = last_hour_readings(conn, db)
+
+    # Display the charts
+    if not hist_data.empty:
+        create_chart(hist_data)
+    else:
+        st.info("No historical data available yet. Data will appear here as it's collected.")
 
     # Check if it's time to auto-refresh (5 minutes passed) or manual refresh button pressed
     if manual_refresh or (datetime.now() - st.session_state.last_refresh) > timedelta(minutes=refresh_interval):
