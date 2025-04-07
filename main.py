@@ -362,15 +362,11 @@ def main():
     if 'last_refresh' not in st.session_state:
         st.session_state.last_refresh = datetime.now()
     
+    # Store the value in a regular variable for the thread to access
+    last_refresh_time = st.session_state.last_refresh
+    
     # Get environment variables
     env = load_environment()
-    
-    # Initialize connections
-    try:
-        board, conn, db = initialize_connections(env)
-    except Exception as e:
-        st.error("Failed to initialize connections. Please check your settings.")
-        return
     
     # Set up the main UI structure
     st.title("Climate Control Center")
@@ -381,8 +377,27 @@ def main():
         refresh_interval = 5  # minutes in full
         st.info(f"Auto-refresh every {refresh_interval} minutes")
         
-        # Create an empty container for the countdown that we can update
-        countdown_placeholder = st.empty()
+        # Calculate time until next refresh
+        time_elapsed = datetime.now() - st.session_state.last_refresh
+        time_until_refresh = timedelta(minutes=refresh_interval) - time_elapsed
+        
+        # Show minutes remaining with a descriptive message
+        minutes_remaining = max(0, int(time_until_refresh.total_seconds() // 60))
+        
+        if minutes_remaining > 1:
+            st.write(f"Next refresh in about {minutes_remaining} minutes")
+        elif minutes_remaining == 1:
+            st.write("Next refresh in about 1 minute")
+        else:
+            seconds_remaining = max(0, int(time_until_refresh.total_seconds()))
+            if seconds_remaining > 30:
+                st.write("Next refresh in less than a minute")
+            else:
+                st.write("Next refresh coming up soon...")
+        
+        # Create a progress bar for auto-refresh
+        progress_value = min(1.0, max(0.0, time_elapsed.total_seconds() / (refresh_interval * 60)))
+        progress = st.progress(progress_value)
         
         # Add manual refresh button
         manual_refresh = st.button("Refresh Now")
@@ -390,41 +405,13 @@ def main():
         # Display last refresh time
         st.caption(f"Last refreshed: {st.session_state.last_refresh.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # Function to calculate and display the time until next refresh
-    def update_countdown():
-        while True:
-            # Calculate time until next refresh
-            time_elapsed = datetime.now() - st.session_state.last_refresh
-            time_until_refresh = timedelta(minutes=refresh_interval) - time_elapsed
-            
-            if time_until_refresh.total_seconds() <= 0:
-                # Time to refresh - don't update anymore, let the main loop handle it
-                break
-                
-            # Calculate minutes and seconds
-            minutes, seconds = divmod(int(time_until_refresh.total_seconds()), 60)
-            
-            # Update the countdown display
-            with countdown_placeholder.container():
-                st.write(f"Next refresh in: {minutes}m {seconds}s")
-            
-            # Update progress bar
-            progress_value = 1 - (time_until_refresh.total_seconds() / (refresh_interval * 60))
-            progress.progress(min(1.0, max(0.0, progress_value)))
-            
-            # Sleep for 1 second
-            time.sleep(1)
-
-    # Create a progress bar for auto-refresh
-    progress = st.progress(0.0)
-
-    # Start countdown update in a separate thread to avoid blocking the main app
-    countdown_thread = Thread(target=update_countdown, daemon=True)
-    countdown_thread.start()
-    
-    # Create placeholders for each sensor reading
-    col1, col2 = st.columns(2)
-    
+    # Initialize connections
+    try:
+        board, conn, db = initialize_connections(env)
+    except Exception as e:
+        st.error("Failed to initialize connections. Please check your settings.")
+        return
+        
     # Read and display sensor data
     try:
         # Read sensor values
@@ -443,6 +430,7 @@ def main():
         air_light = calculate_air_light(al_raw_value)
         
         # Update the UI containers with fresh data
+        col1, col2 = st.columns(2)
         with col1:
             with st.container():
                 st.subheader("Soil Moisture")
@@ -551,6 +539,11 @@ def main():
         # Update the last refresh time
         st.session_state.last_refresh = current_time
         # Trigger page rerun
+        st.rerun()
+    else:
+        # If it's not time to refresh yet, add a 1-second automatic rerun
+        # This will update the countdown timer every second
+        time.sleep(1)
         st.rerun()
 
 # Run the main function
