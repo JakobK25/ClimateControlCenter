@@ -102,3 +102,49 @@ class Calculate:
         }
     
     def calculate_air_wind(self):
+        if self.air_wind is None:
+            return {'speed': None, 'status': None}
+        
+        try:
+            # Assuming air_wind is in some raw format, convert it to speed
+            speed = self.air_wind * 0.1  # Example conversion factor
+            speed = round(speed, 2)  # Round to 2 decimal places
+
+        except Exception as e:
+            print(f"Error calculating air wind: {e}")
+            speed = {'speed': None, 'status': None}
+        
+        return {
+            'speed': speed, 
+        }
+    
+    def calculate_air_light(self):
+        if self.air_light is None:
+            return {'light': None, 'status': None}
+        
+        try:
+            light_percentage = round(self.air_light * 100, 1)  # Convert to percentage
+            light_percentage = max(0, min(light_percentage, 100))  # Ensure percentage is between 0 and 100
+
+        except Exception as e:
+            print(f"Error calculating air light: {e}")
+            light_percentage = {'light': None, 'status': None}
+
+        # Determine status based on light percentage
+        if light_percentage < 20:
+            status = "Very Low Light"
+        elif light_percentage < 40:
+            status = "Low Light"
+        elif light_percentage < 60:
+            status = "Moderate Light"
+        elif light_percentage < 80:
+            status = "Bright Light"
+        else:
+            status = "Very Bright Light"
+
+        return {
+            'light': light_percentage, 
+            'status': status
+                }
+    
+    
