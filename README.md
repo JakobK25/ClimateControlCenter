@@ -22,7 +22,7 @@ Climate Control Center is a robust monitoring system that tracks environmental c
 - Arduino board (connected via USB)
 - Soil moisture sensor (analog pin A0)
 - Air temperature sensor (analog pin A1)
-- Air humidity sensor (analog pin A2)
+- Air flow sensor (analog pin A2)
 - Light sensor (analog pin A3)
 
 ### Software
