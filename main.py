@@ -9,6 +9,7 @@ import psycopg2
 import math
 import struct
 from datetime import datetime, timedelta
+from threading import Thread
 
 # Set page config
 st.set_page_config(page_title="Climate Control Center", layout="wide")
@@ -219,26 +220,32 @@ def calculate_air_light(al_raw_value):
     if al_raw_value is None:
         return {'light': None, 'status': None}
     
-    try:
-        al_raw_value = 1023 - al_raw_value
-        al_percentage = round((al_raw_value / 1023) * 100, 1)
+    try:        
+        # Direct translation: raw value * 100 = percentage
+        # For example: 0.0 = 0%, 0.36 = 36%, etc.
+        light_percentage = round(al_raw_value * 100, 1)
+        
+        # Ensure percentage is within valid range
+        light_percentage = max(0, min(100, light_percentage))
+        
     except Exception as e:
-        st.error(f"Error calculating air light: {e}")
+        st.error(f"Error calculating light level: {e}")
         return {'light': None, 'status': None}
     
-    if al_percentage < 20:
-        status = "Very Low"
-    elif al_percentage < 40:
-        status = "Low"
-    elif al_percentage < 60:
+    # Determine light status
+    if light_percentage < 20:
+        status = "Very Dark"
+    elif light_percentage < 40:
+        status = "Dark"
+    elif light_percentage < 60:
         status = "Moderate"
-    elif al_percentage < 80:
-        status = "High"
+    elif light_percentage < 80:
+        status = "Bright"
     else:
-        status = "Very High"
+        status = "Very Bright"
 
     return {
-        'light': al_percentage,
+        'light': light_percentage,
         'status': status
     }
 
@@ -371,26 +378,49 @@ def main():
     # Add sidebar with auto-refresh information
     with st.sidebar:
         st.header("Refresh Settings")
-        refresh_interval = 5  # minutes
+        refresh_interval = 5  # minutes in full
         st.info(f"Auto-refresh every {refresh_interval} minutes")
         
-        # Calculate time until next refresh
-        time_elapsed = datetime.now() - st.session_state.last_refresh
-        time_until_refresh = timedelta(minutes=refresh_interval) - time_elapsed
-        minutes, seconds = divmod(max(0, time_until_refresh.seconds), 60)
-        
-        # Display time until next refresh
-        st.write(f"Next refresh in: {minutes}m {seconds}s")
+        # Create an empty container for the countdown that we can update
+        countdown_placeholder = st.empty()
         
         # Add manual refresh button
         manual_refresh = st.button("Refresh Now")
         
         # Display last refresh time
         st.caption(f"Last refreshed: {st.session_state.last_refresh.strftime('%Y-%m-%d %H:%M:%S')}")
-    
+
+    # Function to calculate and display the time until next refresh
+    def update_countdown():
+        while True:
+            # Calculate time until next refresh
+            time_elapsed = datetime.now() - st.session_state.last_refresh
+            time_until_refresh = timedelta(minutes=refresh_interval) - time_elapsed
+            
+            if time_until_refresh.total_seconds() <= 0:
+                # Time to refresh - don't update anymore, let the main loop handle it
+                break
+                
+            # Calculate minutes and seconds
+            minutes, seconds = divmod(int(time_until_refresh.total_seconds()), 60)
+            
+            # Update the countdown display
+            with countdown_placeholder.container():
+                st.write(f"Next refresh in: {minutes}m {seconds}s")
+            
+            # Update progress bar
+            progress_value = 1 - (time_until_refresh.total_seconds() / (refresh_interval * 60))
+            progress.progress(min(1.0, max(0.0, progress_value)))
+            
+            # Sleep for 1 second
+            time.sleep(1)
+
     # Create a progress bar for auto-refresh
-    progress_seconds = min(time_elapsed.seconds, refresh_interval * 60)
-    progress = st.progress(progress_seconds / (refresh_interval * 60))
+    progress = st.progress(0.0)
+
+    # Start countdown update in a separate thread to avoid blocking the main app
+    countdown_thread = Thread(target=update_countdown, daemon=True)
+    countdown_thread.start()
     
     # Create placeholders for each sensor reading
     col1, col2 = st.columns(2)
@@ -516,9 +546,10 @@ def main():
         st.info("No historical data available yet. Data will appear here as it's collected.")
 
     # Check if it's time to auto-refresh (5 minutes passed) or manual refresh button pressed
-    if manual_refresh or (datetime.now() - st.session_state.last_refresh) > timedelta(minutes=refresh_interval):
+    current_time = datetime.now()
+    if manual_refresh or (current_time - st.session_state.last_refresh) > timedelta(minutes=refresh_interval):
         # Update the last refresh time
-        st.session_state.last_refresh = datetime.now()
+        st.session_state.last_refresh = current_time
         # Trigger page rerun
         st.rerun()
 
