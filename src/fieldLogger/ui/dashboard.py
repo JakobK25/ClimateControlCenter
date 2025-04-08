@@ -11,6 +11,21 @@ def main(app):
     # Set up the main UI structure
     st.title("Climate Control Center")
     
+    # Add custom CSS for equal-sized containers
+    st.markdown("""
+    <style>
+    .metric-box {
+        min-height: 200px;
+        height: 200px;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    .stContainer {
+        height: 200px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     # Add sidebar with refresh settings
     with st.sidebar:
         st.header("Refresh Settings")
@@ -43,41 +58,71 @@ def main(app):
         col1, col2 = st.columns(2)
         
         with col1:
+            # Soil Moisture container
             with st.container():
-                st.subheader("Soil Moisture")
-                soil = readings['soil_humidity']
-                st.metric(
-                    label="Moisture", 
-                    value=f"{soil['percentage']}%" if soil['percentage'] is not None else "N/A",
-                )
-                st.caption(f"Status: {soil['status']}")
+                container = st.container(border=True)
+                with container:
+                    st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                    st.subheader("Soil Moisture")
+                    soil = readings['soil_humidity']
+                    st.metric(
+                        label="Moisture", 
+                        value=f"{soil['percentage']}%" if soil['percentage'] is not None else "N/A",
+                    )
+                    st.caption(f"Status: {soil['status']}")
+                    # Add empty space to ensure equal height
+                    st.markdown('</div>', unsafe_allow_html=True)
             
+            # Add some spacing between containers
+            st.write("")
+            
+            # Air Flow container
             with st.container():
-                st.subheader("Air Flow")
-                flow = readings['air_wind']
-                st.metric(
-                    label="Air Flow", 
-                    value=f"{flow['speed']} m/s" if flow['speed'] is not None else "N/A",
-                )
-                st.caption(f"Status: {flow['status']}")
+                container = st.container(border=True)
+                with container:
+                    st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                    st.subheader("Air Flow")
+                    flow = readings['air_wind']
+                    st.metric(
+                        label="Air Flow", 
+                        value=f"{flow['speed']} m/s" if flow['speed'] is not None else "N/A",
+                    )
+                    st.caption(f"Status: {flow['status']}")
+                    st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
+            # Air Temperature container
             with st.container():
-                st.subheader("Air Temperature")
-                temp = readings['air_temperature']
-                st.metric(
-                    label="Temperature", 
-                    value=f"{temp['temperature']}°C" if temp['temperature'] is not None else "N/A",
-                )
+                container = st.container(border=True)
+                with container:
+                    st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                    st.subheader("Air Temperature")
+                    temp = readings['air_temperature']
+                    st.metric(
+                        label="Temperature", 
+                        value=f"{temp['temperature']}°C" if temp['temperature'] is not None else "N/A",
+                    )
+                    # Add extra space since this has no status
+                    st.write("")
+                    st.write("")
+                    st.markdown('</div>', unsafe_allow_html=True)
             
+            # Add some spacing between containers
+            st.write("")
+            
+            # Light Level container
             with st.container():
-                st.subheader("Light Level")
-                light = readings['air_light']
-                st.metric(
-                    label="Light", 
-                    value=f"{light['light']}%" if light['light'] is not None else "N/A",
-                )
-                st.caption(f"Status: {light['status']}")
+                container = st.container(border=True)
+                with container:
+                    st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                    st.subheader("Light Level")
+                    light = readings['air_light']
+                    st.metric(
+                        label="Light", 
+                        value=f"{light['light']}%" if light['light'] is not None else "N/A",
+                    )
+                    st.caption(f"Status: {light['status']}")
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
         # Display historical data
         st.header("Sensor History (Last Hour)")
