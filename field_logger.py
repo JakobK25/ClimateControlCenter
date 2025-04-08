@@ -2,6 +2,7 @@ import streamlit as st
 import sys
 import os
 import atexit
+from src.fieldLogger.arduino import ArduinoHandler
 
 # Add page config as the FIRST Streamlit command
 st.set_page_config(page_title="Climate Control Center", layout="wide")
@@ -15,8 +16,9 @@ from src.fieldLogger.app import FieldLoggerApp
 def main():
     app = FieldLoggerApp()
     
-    # Register cleanup handler
+    # Register cleanup handlers
     atexit.register(app.cleanup)
+    atexit.register(ArduinoHandler.cleanup_all)
     
     # Run the application
     app.run()

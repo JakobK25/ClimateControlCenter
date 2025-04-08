@@ -65,9 +65,11 @@ class FieldLoggerApp:
     def cleanup(self):
         """Clean up resources before exiting."""
         try:
+            # First close Arduino
             if hasattr(self, 'arduino'):
                 self.arduino.close()
             
+            # Then close database connections
             if hasattr(self, 'db_cursor') and self.db_cursor:
                 self.db_cursor.close()
                 

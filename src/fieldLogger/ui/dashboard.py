@@ -93,7 +93,17 @@ def main(app):
             st.info("No historical data available yet. Data will appear here as it's collected.")
         
         # Handle refresh logic
-        if manual_refresh or (datetime.now() - st.session_state.last_refresh_time).total_seconds() >= refresh_rate:
+        if manual_refresh:
+            # Clean up Arduino connection before refresh
+            app.arduino.close()
+            
+            # Update refresh time
+            st.session_state.last_refresh_time = datetime.now()
+            
+            # Trigger rerun
+            st.rerun()
+            
+        if (datetime.now() - st.session_state.last_refresh_time).total_seconds() >= refresh_rate:
             st.session_state.last_refresh_time = datetime.now()
             st.rerun()
             
