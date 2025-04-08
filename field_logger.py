@@ -2,7 +2,6 @@ import streamlit as st
 import sys
 import os
 import atexit
-from src.fieldLogger.arduino import ArduinoHandler
 
 # Add page config as the FIRST Streamlit command
 st.set_page_config(page_title="Climate Control Center", layout="wide")
@@ -13,12 +12,22 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # Now import the app
 from src.fieldLogger.app import FieldLoggerApp
 
+# This function will be called when the script exits completely (not on rerun)
+def cleanup():
+    if 'arduino_board' in st.session_state and st.session_state.arduino_board:
+        try:
+            st.session_state.arduino_board.exit()
+            st.session_state.arduino_board = None
+            st.session_state.arduino_initialized = False
+        except:
+            pass
+
 def main():
-    app = FieldLoggerApp()
+    # Register cleanup for complete exit
+    atexit.register(cleanup)
     
-    # Register cleanup handlers
-    atexit.register(app.cleanup)
-    atexit.register(ArduinoHandler.cleanup_all)
+    # Initialize app
+    app = FieldLoggerApp()
     
     # Run the application
     app.run()
