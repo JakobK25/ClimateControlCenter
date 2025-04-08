@@ -16,7 +16,17 @@ class FieldLoggerApp:
         
     def read_sensors(self):
         """Read sensor values from Arduino."""
-        return self.arduino.read_sensors()
+        try:
+            return self.arduino.read_sensors()
+        except Exception as e:
+            st.error(f"Failed to read sensors: {e}")
+            # Return default values as fallback
+            return {
+                "air_temperature": 0.5,  # Default value
+                "air_wind": 0.2,
+                "air_light": 0.5,
+                "soil_humidity": 0.5
+            }
     
     def process_readings(self):
         """Process raw sensor readings into meaningful values."""
