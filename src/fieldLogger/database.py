@@ -1,5 +1,4 @@
-from config import config
-from config import env
+from .config import Config
 import streamlit as st
 import psycopg2
 import os

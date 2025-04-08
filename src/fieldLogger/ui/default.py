@@ -1,8 +1,8 @@
 import streamlit as st
-import config as config
+from ..config import Config  # Fix the import
 
 def main():
-    st.set_page_config(page_title="Field Logger", page_icon="🌱", Layout="wide")
+    # Remove page config since it's in the main file now
+    # st.set_page_config(page_title="Field Logger", page_icon="🌱", Layout="wide")
     st.title("ClimateControlCenter")
 
-    

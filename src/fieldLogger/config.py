@@ -42,12 +42,12 @@ class Config:
         }
 
     def get_sensor_pins(self):
-        """Returns a list of sensor pins."""
+        """Returns a dictionary of sensor pins."""
         return {
             "air_temperature": self.AIR_TEMPERATURE_SENSOR,
             "air_wind": self.AIR_WIND_SENSOR,
             "air_light": self.AIR_LIGHT_SENSOR,
-            "soil_humidity": self.SOIL_HUMIDITY_SENSOR,
+            "soil_humidity": self.SOIL_HUMIDITY_SENSOR
         }
 
 def init_db_connection(config):
@@ -60,6 +60,10 @@ def init_db_connection(config):
             host=config.POSTGRES_HOST,
             port=config.POSTGRES_PORT
         )
-        # Rest of function...
+        conn.autocommit = True
+        return conn
+    except psycopg2.Error as e:
+        print(f"Database connection error: {e}")
+        raise
 
 

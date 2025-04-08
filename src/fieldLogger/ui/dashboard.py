@@ -8,9 +8,6 @@ def main(app):
     if 'last_refresh_time' not in st.session_state:
         st.session_state.last_refresh_time = datetime.now()
     
-    # Set up page config
-    st.set_page_config(page_title="Climate Control Center", layout="wide")
-    
     # Set up the main UI structure
     st.title("Climate Control Center")
     
