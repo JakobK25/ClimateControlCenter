@@ -23,7 +23,7 @@ class FieldLoggerApp:
             # Return default values as fallback
             return {
                 "air_temperature": 0.5,  # Default value
-                "air_wind": 0.2,
+                # Remove air_wind default value
                 "air_light": 0.5,
                 "soil_humidity": 0.5
             }
@@ -40,7 +40,7 @@ class FieldLoggerApp:
         self.readings = {
             'soil_humidity': calculator.calculate_soil_humidity(),
             'air_temperature': calculator.calculate_air_temp(),
-            'air_wind': calculator.calculate_air_wind(),
+            # Remove air_wind reading
             'air_light': calculator.calculate_air_light()
         }
         

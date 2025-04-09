@@ -22,7 +22,6 @@ def init_db_connection(config):
                     timestamp TIMESTAMP NOT NULL,
                     soil_moisture FLOAT,
                     air_temp FLOAT,
-                    air_flow FLOAT,  -- Changed from air_humidity
                     air_light FLOAT
                 )
             """
@@ -46,24 +45,22 @@ def save_sensor_data(conn, cursor, readings):
     """Save sensor readings to database."""
     try:
         # Check if we have valid data to insert
-        if all(key in readings for key in ['soil_humidity', 'air_temperature', 'air_wind', 'air_light']):
+        if all(key in readings for key in ['soil_humidity', 'air_temperature', 'air_light']):
             
             # Extract the percentage/values from each reading
             soil_moisture = readings['soil_humidity']['percentage'] if 'percentage' in readings['soil_humidity'] else None
             air_temp = readings['air_temperature']['temperature'] if 'temperature' in readings['air_temperature'] else None
-            air_flow = readings['air_wind']['speed'] if 'speed' in readings['air_wind'] else None
             air_light = readings['air_light']['light'] if 'light' in readings['air_light'] else None
             
-            if all(val is not None for val in [soil_moisture, air_temp, air_flow, air_light]):
+            if all(val is not None for val in [soil_moisture, air_temp, air_light]):
                 insert_query = """
-                    INSERT INTO sensor_data (timestamp, soil_moisture, air_temp, air_flow, air_light)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO sensor_data (timestamp, soil_moisture, air_temp, air_light)
+                    VALUES (%s, %s, %s, %s)
                 """
                 data = (
                     datetime.now(),
                     soil_moisture,
                     air_temp,
-                    air_flow,
                     air_light
                 )
                 

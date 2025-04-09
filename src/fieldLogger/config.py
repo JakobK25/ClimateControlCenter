@@ -20,7 +20,6 @@ class Config:
 
         # Sensor configuration
         self.AIR_TEMPERATURE_SENSOR = int(os.getenv("AIR_TEMPERATURE_SENSOR", 1))
-        self.AIR_WIND_SENSOR = int(os.getenv("AIR_WIND_SENSOR", 2))
         self.AIR_LIGHT_SENSOR = int(os.getenv("AIR_LIGHT_SENSOR", 3))
         self.SOIL_HUMIDITY_SENSOR = int(os.getenv("SOIL_HUMIDITY_SENSOR", 0))
 
@@ -45,7 +44,6 @@ class Config:
         """Returns a dictionary of sensor pins."""
         return {
             "air_temperature": self.AIR_TEMPERATURE_SENSOR,
-            "air_wind": self.AIR_WIND_SENSOR,
             "air_light": self.AIR_LIGHT_SENSOR,
             "soil_humidity": self.SOIL_HUMIDITY_SENSOR
         }
