@@ -3,6 +3,8 @@ from pyfirmata import util
 import time
 import streamlit as st
 import serial
+import os
+import subprocess
 
 class ArduinoHandler:
     def __init__(self, config):
@@ -25,8 +27,8 @@ class ArduinoHandler:
             # Try to close any existing connection first
             self.close()
             
-            # Small delay to ensure port is released
-            time.sleep(0.2)
+            # Force close the port more aggressively
+            self.force_close_port(self.config.ARDUINO_PORT)
             
             # Try to connect
             self.board = pyfirmata.Arduino(self.config.ARDUINO_PORT)
@@ -50,7 +52,40 @@ class ArduinoHandler:
             st.sidebar.error(f"Error initializing Arduino: {e}")
             self.board = None
             st.session_state.arduino_board = None
+            
+            # Give troubleshooting advice
+            st.sidebar.warning("""
+            **Troubleshooting steps:**
+            1. Try running as administrator
+            2. Unplug and reconnect Arduino
+            3. Close any other programs using COM6
+            4. Restart your computer
+            """)
+            
             raise Exception(f"Error initializing Arduino: {e}")
+    
+    def force_close_port(self, port):
+        """Force close the serial port using more aggressive methods."""
+        try:
+            # Try the standard close first
+            try:
+                s = serial.Serial(port)
+                s.close()
+                time.sleep(0.5)
+            except:
+                pass
+                
+            # On Windows, try killing processes that might be using the port
+            if os.name == 'nt':
+                try:
+                    # Find processes using the port and kill them
+                    cmd = f'powershell "Get-Process | Where-Object {{$_.Modules.FileName -like \'*{port}*\'}} | Stop-Process -Force"'
+                    subprocess.run(cmd, shell=True)
+                    time.sleep(1)
+                except:
+                    pass
+        except:
+            pass
     
     def read_sensors(self):
         """Read all sensor values."""
