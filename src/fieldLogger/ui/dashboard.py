@@ -42,10 +42,6 @@ def main(app):
         # Display last refresh time
         st.caption(f"Last refreshed: {st.session_state.last_refresh_display.strftime('%Y-%m-%d %H:%M:%S')}")
         
-        # NEW: Use Streamlit's built-in auto-refresh capability
-        # This triggers a full page reload at the specified interval
-        st.empty()  # This empty element will be replaced with auto-refresh
-        
         # Add a note about refresh
         st.info(f"Page will auto-refresh every {refresh_rate} seconds")
         
@@ -58,15 +54,8 @@ def main(app):
             app.arduino.close()
         except:
             pass
-        # Hard refresh with redirect to self
-        from streamlit.runtime.scriptrunner import get_script_run_ctx
-        ctx = get_script_run_ctx()
-        if ctx is not None:
-            url = ctx.session_info.current_url
-            st.markdown(f"""
-            <meta http-equiv="refresh" content="0;URL='{url}'">
-            """, unsafe_allow_html=True)
-            st.stop()
+        # Use the modern Streamlit rerun function instead of HTML redirect
+        st.rerun()
     
     # NEW APPROACH: Add auto-refresh meta tag with JavaScript
     # This will refresh the entire page at the specified interval
@@ -76,21 +65,6 @@ def main(app):
     setTimeout(function() {{
         window.location.reload();
     }}, {refresh_rate * 1000});
-    
-    // Update countdown timer
-    var countdownElement = document.getElementById('countdown');
-    var seconds = {refresh_rate};
-    function updateCountdown() {{
-        seconds--;
-        if (seconds < 0) return;
-        var minutes = Math.floor(seconds / 60);
-        var remainingSeconds = seconds % 60;
-        if (countdownElement) {{
-            countdownElement.innerText = minutes + "m " + remainingSeconds + "s";
-        }}
-        setTimeout(updateCountdown, 1000);
-    }}
-    updateCountdown();
     </script>
     """
     
