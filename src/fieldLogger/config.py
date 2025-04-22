@@ -27,11 +27,15 @@ class Config:
         self.REFRESH_RATE = int(os.getenv("REFRESH_RATE", 5))  # Default to 5 seconds if not set
 
     def get_db_string(self):
-        """Returns the database connection string."""
+        """
+        Returns the database connection string.
+        """
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     def get_db_params(self):
-        """Returns database connection parameters as a dictionary."""
+        """
+        Returns database connection parameters as a dictionary.
+        """
         return {
             "dbname": self.POSTGRES_DB,
             "user": self.POSTGRES_USER,
@@ -41,7 +45,9 @@ class Config:
         }
 
     def get_sensor_pins(self):
-        """Returns a dictionary of sensor pins."""
+        """
+        Returns a dictionary of sensor pins.
+        """
         return {
             "air_temperature": self.AIR_TEMPERATURE_SENSOR,
             "air_light": self.AIR_LIGHT_SENSOR,

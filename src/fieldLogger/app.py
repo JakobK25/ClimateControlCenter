@@ -8,14 +8,18 @@ import time
 
 class FieldLoggerApp:
     def __init__(self):
-        """Initialize the Field Logger App."""
+        """
+        Initialize the Field Logger App.
+        """
         self.config = Config()
         self.db_conn, self.db_cursor = init_db_connection(self.config)
         self.arduino = ArduinoHandler(self.config)
         self.readings = {}
         
     def read_sensors(self):
-        """Read sensor values from Arduino."""
+        """
+        Read sensor values from Arduino.
+        """
         try:
             return self.arduino.read_sensors()
         except Exception as e:
@@ -29,7 +33,9 @@ class FieldLoggerApp:
             }
     
     def process_readings(self):
-        """Process raw sensor readings into meaningful values."""
+        """
+        Process raw sensor readings into meaningful values.
+        """
         # Get raw sensor values
         sensor_values = self.read_sensors()
         
@@ -47,12 +53,16 @@ class FieldLoggerApp:
         return self.readings
     
     def save_to_database(self):
-        """Save current readings to database."""
+        """
+        Save current readings to database.
+        """
         success, message = save_sensor_data(self.db_conn, self.db_cursor, self.readings)
         return success, message
     
     def run(self):
-        """Main application loop."""
+        """
+        Main application loop.
+        """
         try:
             # Process sensor readings
             self.process_readings()
@@ -73,7 +83,9 @@ class FieldLoggerApp:
             st.code(traceback.format_exc())
         
     def cleanup(self):
-        """Clean up resources before exiting."""
+        """
+        Clean up resources before exiting.
+        """
         try:
             # First close Arduino
             if hasattr(self, 'arduino'):

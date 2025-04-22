@@ -22,7 +22,9 @@ class ArduinoHandler:
                 self.initialize_board()
     
     def initialize_board(self):
-        """Initialize Arduino board and setup pins."""
+        """
+        Initialize Arduino board and setup pins.
+        """
         try:
             # Try to close any existing connection first
             self.close()
@@ -65,7 +67,9 @@ class ArduinoHandler:
             raise Exception(f"Error initializing Arduino: {e}")
     
     def force_close_port(self, port):
-        """Force close the serial port using more aggressive methods."""
+        """
+        Force close the serial port using more aggressive methods.
+        """
         try:
             # Try the standard close first
             try:
@@ -88,7 +92,9 @@ class ArduinoHandler:
             pass
     
     def read_sensors(self):
-        """Read all sensor values."""
+        """
+        Read all sensor values.
+        """
         if self.board is None:
             # Try to initialize again
             self.initialize_board()
@@ -115,7 +121,9 @@ class ArduinoHandler:
         return sensor_values
     
     def close(self):
-        """Close the board connection."""
+        """
+        Close the board connection.
+        """
         if hasattr(self, 'board') and self.board is not None:
             try:
                 self.board.exit()

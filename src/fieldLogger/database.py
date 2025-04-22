@@ -5,7 +5,9 @@ import os
 from datetime import datetime
 
 def init_db_connection(config):
-    """Initialize database connection and cursor."""
+    """
+    Initialize database connection and cursor.
+    """
     # Connect to PostgreSQL database
     try:
         conn = psycopg2.connect(**config.get_db_params())
@@ -42,7 +44,9 @@ def init_db_connection(config):
         raise
 
 def save_sensor_data(conn, cursor, readings):
-    """Save sensor readings to database."""
+    """
+    Save sensor readings to database.
+    """
     try:
         # Check if we have valid data to insert
         if all(key in readings for key in ['soil_humidity', 'air_temperature', 'air_light']):
@@ -77,7 +81,9 @@ def save_sensor_data(conn, cursor, readings):
         return False, f"Error writing to database: {e}"
 
 def get_historical_data(conn, cursor, hours=1):
-    """Get historical sensor data from the last X hours."""
+    """
+    Get historical sensor data from the last X hours.
+    """
     from datetime import timedelta
     import pandas as pd
     

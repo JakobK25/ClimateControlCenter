@@ -4,7 +4,9 @@ from datetime import datetime, timedelta
 import time
 
 def main(app):
-    """Main dashboard UI."""
+    """
+    Main dashboard UI.
+    """
     # Set up the main UI structure
     st.title("Climate Control Center")
     
@@ -133,7 +135,9 @@ def main(app):
         st.code(traceback.format_exc())
 
 def create_chart(df):
-    """Create charts for the historical sensor data."""
+    """
+    Create charts for the historical sensor data.
+    """
     if df.empty:
         return st.warning("No data available for the chart.")
     

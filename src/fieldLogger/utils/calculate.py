@@ -9,7 +9,9 @@ class Calculate:
         self.soil_humidity = sensor_values.get('soil_humidity')
     
     def calculate_soil_humidity(self):
-        """Calculate soil humidity percentage and status."""
+        """
+        Calculate soil humidity percentage and status.
+        """
         if self.soil_humidity is None:
             return {'percentage': None, 'status': None}
         
@@ -50,7 +52,9 @@ class Calculate:
         }
     
     def calculate_air_temp(self):
-        """Calculate air temperature in Celsius."""
+        """
+        Calculate air temperature in Celsius.
+        """
         if self.air_temperature is None:
             return {'temperature': None, 'status': None}
 
@@ -84,7 +88,9 @@ class Calculate:
         }
     
     def calculate_air_light(self):
-        """Calculate light level percentage and status."""
+        """
+        Calculate light level percentage and status.
+        """
         if self.air_light is None:
             return {'light': None, 'status': None}
         

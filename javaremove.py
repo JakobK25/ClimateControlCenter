@@ -2,7 +2,9 @@ import os
 import glob
 
 def fix_js_comments(directory):
-    """Recursively find and fix JavaScript-style comments in all files."""
+    """
+    Recursively find and fix JavaScript-style comments in all files.
+    """
     # Get all files in directory and subdirectories
     file_types = ['*.py', '*.toml', '*.yml', '*.md', '*.env', '*.txt', '.env']
     
