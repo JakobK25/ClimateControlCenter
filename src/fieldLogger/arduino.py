@@ -60,7 +60,7 @@ class ArduinoHandler:
             **Troubleshooting steps:**
             1. Try running as administrator
             2. Unplug and reconnect Arduino
-            3. Close any other programs using COM6
+            3. Close any other programs using the port (e.g., Arduino IDE)
             4. Restart your computer
             """)
             

@@ -24,57 +24,42 @@ def main(app):
     </style>
     """, unsafe_allow_html=True)
     
-    # Store last refresh time in sidebar for display purposes
+    # Store last refresh time in session state
     if 'last_refresh_display' not in st.session_state:
         st.session_state.last_refresh_display = datetime.now()
+        
+    # Store last auto refresh time in session state
+    if 'last_auto_refresh' not in st.session_state:
+        st.session_state.last_auto_refresh = datetime.now()
     
-    # Add sidebar with refresh settings
+    # Check if 10 minutes have passed since last auto refresh
+    current_time = datetime.now()
+    if current_time - st.session_state.last_auto_refresh > timedelta(minutes=10):
+        # Update the readings directly without full page reload
+        app.process_readings()
+        app.save_to_database()
+        st.session_state.last_refresh_display = current_time
+        st.session_state.last_auto_refresh = current_time
+        st.rerun()
+    
+    # Add sidebar with manual refresh button
     with st.sidebar:
-        st.header("Refresh Settings")
+        st.header("Refresh Controls")
         
-        # Get refresh rate from slider
-        refresh_rate = st.slider("Refresh Rate (seconds)", 
-                               min_value=1, 
-                               max_value=60, 
-                               value=int(app.config.REFRESH_RATE))
-        
-        # Add manual refresh button
-        manual_refresh = st.button("Refresh Now")
+        # Add manual refresh button with callback
+        if st.button("Refresh Now", key="fast_refresh"):
+            # Update the readings directly without full page reload
+            app.process_readings()
+            app.save_to_database()
+            st.session_state.last_refresh_display = datetime.now()
+            st.rerun()
         
         # Display last refresh time
         st.caption(f"Last refreshed: {st.session_state.last_refresh_display.strftime('%Y-%m-%d %H:%M:%S')}")
         
-        # Add a note about refresh
-        st.info(f"Page will auto-refresh every {refresh_rate} seconds")
-        
-    # Handle manual refresh button
-    if manual_refresh:
-        # Update display time
-        st.session_state.last_refresh_display = datetime.now()
-        # Close Arduino connection before refresh
-        try:
-            app.arduino.close()
-        except:
-            pass
-        # Use the modern Streamlit rerun function instead of HTML redirect
-        st.rerun()
-    
-    # NEW APPROACH: Add auto-refresh meta tag with JavaScript
-    # This will refresh the entire page at the specified interval
-    refresh_html = f"""
-    <script>
-    // Set timeout to refresh the page
-    setTimeout(function() {{
-        window.location.reload();
-    }}, {refresh_rate * 1000});
-    </script>
-    """
-    
-    # Insert the refresh script
-    st.components.v1.html(refresh_html, height=0)
-    
-    # Update display refresh time whenever page loads
-    st.session_state.last_refresh_display = datetime.now()
+        # Display next auto refresh time (hidden in a comment for debugging if needed)
+        next_refresh = st.session_state.last_auto_refresh + timedelta(minutes=10)
+        st.caption(f"Next auto-refresh: {next_refresh.strftime('%Y-%m-%d %H:%M:%S')}")
     
     # Display sensor readings
     try:
@@ -145,7 +130,7 @@ def create_chart(df):
     chart_df = df.copy()
     chart_df = chart_df.set_index('timestamp')
     
-    # Use tabs for a more compact display - removed air_flow tab
+    # Use tabs for a more compact display
     tab1, tab2, tab3 = st.tabs(["Soil Moisture", "Temperature", "Light"])
     
     with tab1:
